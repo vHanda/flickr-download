@@ -85,13 +85,25 @@ function fetchPhoto(photo) {
 Flickr.tokenOnly(flickrOptions, function(error, flickrApi) {
     flickr = flickrApi
 
-    flickr.photos.search({page: 1, per_page: 500, has_geo: 1}, function(err, result) {
-        var photos = result.photos.photo
-        for (var i = 0; i < photos.length; i++) {
-            var photo = photos[i];
-            fetchPhoto(photo)
-        }
-    });
+    // We want 10,000 images
+    var options = {
+        page: 1,
+        per_page: 250,
+        has_geo: 1,
+        accuracy: 11,
+        content_type: 1
+    };
+
+    for (var pageNum = 1 ; pageNum < 50; pageNum++) {
+        options["page"] = pageNum;
+        flickr.photos.search(options, function(err, result) {
+            var photos = result.photos.photo
+            for (var i = 0; i < photos.length; i++) {
+                var photo = photos[i];
+                fetchPhoto(photo)
+            }
+        });
+    }
 });
 
 String.prototype.contains = function(it) { return this.indexOf(it) != -1; };
