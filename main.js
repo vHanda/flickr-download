@@ -6,7 +6,7 @@ var Flickr = require("flickrapi"),
 
 var https = require('https');
 var fs = require('fs');
-//var ex = require('exiv2');
+var ex = require('exiv2');
 var flickr;
 
 function downloadUrl(url, dest, cb) {
@@ -24,32 +24,46 @@ function fetchPhoto(photo) {
         if (err) {
             return;
         }
-        
+
         var sizes = result.sizes.size
         for (var j = 0; j < sizes.length; j++) {
             var size = sizes[j];
             if (size.width > 1000) {
                 console.log(size.source);
-                
-                downloadUrl(size.source, "img" + photo.id, function() {
+
+                var filepath = "img" + photo.id;
+                downloadUrl(size.source, filepath, function() {
                     console.log("Saved " + photo.id + " " + size.source);
-                    
+
                     flickr.photos.getExif({photo_id: photo.id}, function(err, response) {
                         if (err) {
                             return; 
                         }
                         var exif = response.photo.exif
+                        var tagMap = {}
                         for (var i = 0; i < exif.length; i++) {
                             var exifTag = exif[i];
-                            var tag = exifTag.tagspace + '.' + exifTag.label;
+                            var tag = "Exif." + exifTag.tagspace + '.' + exifTag.tag;
                             var val = exifTag.raw._content
-                            
-                            console.log(tag + " --> " + val)
-                            // How do I save this information into the image??
+
+                            if (tag.contains("Apple") || tag.contains("Adobe") || tag.contains("IFD")) {
+                                continue;
+                            }
+                            tagMap[tag] = val
                         }
+
+                        ex.setImageTags(filepath, tagMap, function(err) {
+                            if (err) {
+                                console.log("IMAGE TAG SAVE: " + err);
+                                console.log("path " + filepath);
+                                console.log(tagMap)
+                            }
+                            else
+                                console.log("IMAGE TAGS SAVED " + filepath);
+                        });
                     });
                 });
-                
+
                 return;
             }
         }
@@ -58,7 +72,7 @@ function fetchPhoto(photo) {
 
 Flickr.tokenOnly(flickrOptions, function(error, flickrApi) {
     flickr = flickrApi
-    
+
     flickr.photos.search({page: 1, per_page: 500, has_geo: 1}, function(err, result) {
         var photos = result.photos.photo
         for (var i = 0; i < photos.length; i++) {
@@ -67,3 +81,5 @@ Flickr.tokenOnly(flickrOptions, function(error, flickrApi) {
         }
     });
 });
+
+String.prototype.contains = function(it) { return this.indexOf(it) != -1; };
