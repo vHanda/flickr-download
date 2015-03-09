@@ -31,9 +31,9 @@ function fetchPhoto(photo) {
             if (size.width > 1000) {
                 console.log(size.source);
 
-                var filepath = "img" + photo.id;
+                var filepath = "img" + photo.id + ".jpg"
                 downloadUrl(size.source, filepath, function() {
-                    console.log("Saved " + photo.id + " " + size.source);
+                    //console.log("Saved " + photo.id + " " + size.source);
 
                     flickr.photos.getExif({photo_id: photo.id}, function(err, response) {
                         if (err) {
@@ -43,13 +43,23 @@ function fetchPhoto(photo) {
                         var tagMap = {}
                         for (var i = 0; i < exif.length; i++) {
                             var exifTag = exif[i];
+                            if (exifTag.tagspace == "GPS")
+                                exifTag.tagspace = "GPSInfo";
                             var tag = "Exif." + exifTag.tagspace + '.' + exifTag.tag;
                             var val = exifTag.raw._content
 
-                            if (tag.contains("Apple") || tag.contains("Adobe") || tag.contains("IFD")) {
+                            if (!exifTag.tagspace.contains("GPS") && !tag.contains("DateTime"))
                                 continue;
-                            }
+
+                            if (!tag.contains("GPS"))
+                                continue;
                             tagMap[tag] = val
+                        }
+
+                        if (exif.length == 0) {
+                            console.log("NO IMAGE TAGS " + filepath);
+                            fs.unlinkSync(filepath)
+                            return;
                         }
 
                         ex.setImageTags(filepath, tagMap, function(err) {
@@ -57,9 +67,11 @@ function fetchPhoto(photo) {
                                 console.log("IMAGE TAG SAVE: " + err);
                                 console.log("path " + filepath);
                                 console.log(tagMap)
+                                fs.unlinkSync(filepath)
                             }
-                            else
-                                console.log("IMAGE TAGS SAVED " + filepath);
+                            else {
+                                console.log(filepath)
+                            }
                         });
                     });
                 });
