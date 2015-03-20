@@ -49,14 +49,14 @@ function fetchPhoto(photo) {
                             var exifTag = exif[i];
                             if (exifTag.tagspace == "GPS")
                                 exifTag.tagspace = "GPSInfo";
+                            else if (exifTag.tagspace == "ExifIFD")
+                                exifTag.tagspace = "Photo"
                             var tag = "Exif." + exifTag.tagspace + '.' + exifTag.tag;
                             var val = exifTag.raw._content
 
                             if (!exifTag.tagspace.contains("GPS") && !tag.contains("DateTime"))
                                 continue;
 
-                            if (!tag.contains("GPS"))
-                                continue;
                             tagMap[tag] = val
                         }
 
@@ -67,6 +67,7 @@ function fetchPhoto(photo) {
                             return;
                         }
 
+                        console.log(tagMap);
                         ex.setImageTags(filepath, tagMap, function(err) {
                             if (err) {
                                 console.log("IMAGE TAG SAVE: " + err);
