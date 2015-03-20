@@ -20,6 +20,11 @@ function downloadUrl(url, dest, cb) {
 }
 
 function fetchPhoto(photo) {
+    var filepath = "img" + photo.id + ".jpg"
+    if (fs.existsSync(filepath)) {
+        return;
+    }
+
     flickr.photos.getSizes({photo_id: photo.id}, function(err, result) {
         if (err) {
             return;
@@ -31,7 +36,6 @@ function fetchPhoto(photo) {
             if (size.width > 1000) {
                 console.log(size.source);
 
-                var filepath = "img" + photo.id + ".jpg"
                 downloadUrl(size.source, filepath, function() {
                     //console.log("Saved " + photo.id + " " + size.source);
 
@@ -58,7 +62,8 @@ function fetchPhoto(photo) {
 
                         if (exif.length == 0) {
                             console.log("NO IMAGE TAGS " + filepath);
-                            fs.unlinkSync(filepath)
+                            if (fs.existsSync(filepath))
+                                fs.unlinkSync(filepath)
                             return;
                         }
 
@@ -67,7 +72,8 @@ function fetchPhoto(photo) {
                                 console.log("IMAGE TAG SAVE: " + err);
                                 console.log("path " + filepath);
                                 console.log(tagMap)
-                                fs.unlinkSync(filepath)
+                                if (fs.existsSync(filepath))
+                                    fs.unlinkSync(filepath)
                             }
                             else {
                                 console.log(filepath)
@@ -94,7 +100,7 @@ Flickr.tokenOnly(flickrOptions, function(error, flickrApi) {
         content_type: 1
     };
 
-    for (var pageNum = 1 ; pageNum < 50; pageNum++) {
+    for (var pageNum = 1 ; pageNum < 2; pageNum++) {
         options["page"] = pageNum;
         flickr.photos.search(options, function(err, result) {
             var photos = result.photos.photo
