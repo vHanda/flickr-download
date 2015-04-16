@@ -34,14 +34,16 @@ function convertToDecimal(val) {
     return deg + "/1 " + min + "/1 " + Math.floor(sec) + "/1";
 }
 
-function fetchPhoto(photo) {
+function fetchPhoto(photo, cb) {
     var filepath = "img" + photo.id + ".jpg"
     if (fs.existsSync(filepath)) {
+        cb(1);
         return;
     }
 
     flickr.photos.getSizes({photo_id: photo.id}, function(err, result) {
         if (err) {
+            cb(1);
             return;
         }
 
@@ -56,6 +58,7 @@ function fetchPhoto(photo) {
 
                     flickr.photos.getExif({photo_id: photo.id}, function(err, response) {
                         if (err) {
+                            cb(1);
                             return; 
                         }
                         var exif = response.photo.exif
@@ -132,6 +135,7 @@ function fetchPhoto(photo) {
                             console.log("NO IMAGE TAGS " + filepath);
                             if (fs.existsSync(filepath))
                                 fs.unlinkSync(filepath)
+                            cb(1);
                             return;
                         }
 
@@ -146,6 +150,8 @@ function fetchPhoto(photo) {
                             }
                             else {
                                 console.log(filepath)
+                                cb(0);
+                                return;
                             }
                         });
                     });
@@ -175,7 +181,7 @@ Flickr.tokenOnly(flickrOptions, function(error, flickrApi) {
             var photos = result.photos.photo
             for (var i = 0; i < photos.length; i++) {
                 var photo = photos[i];
-                fetchPhoto(photo)
+                fetchPhoto(photo, function(err) {})
             }
         });
     }
