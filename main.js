@@ -158,6 +158,7 @@ function fetchPhoto(photo, cb) {
                             return;
                         }
 
+                        tagMap["Exif.Image.ImageDescription"] = "Flickr image id " + photo.id;
                         console.log(tagMap);
                         ex.setImageTags(filepath, tagMap, function(err) {
                             if (err) {
