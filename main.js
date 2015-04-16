@@ -191,8 +191,9 @@ Flickr.tokenOnly(flickrOptions, function(error, flickrApi) {
         page: 1,
         per_page: 250,
         has_geo: 1,
-        accuracy: 11,
-        content_type: 1
+        accuracy: 11, // geo location up to city level
+        content_type: 1, // 1 is for photos only
+        license: "1,2,3,4,5,6" // https://www.flickr.com/services/api/flickr.photos.licenses.getInfo.html
     };
 
     for (var pageNum = 1 ; pageNum < 2; pageNum++) {
