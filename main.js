@@ -19,6 +19,21 @@ function downloadUrl(url, dest, cb) {
     });
 }
 
+function convertToDecimal(val) {
+    var regExp = new RegExp("(\\d+) deg ([0-9.]+)' ([0-9.]+)\"")
+    var data = regExp.exec(val);
+    if (!data) {
+        console.log("NO MATCH " + val)
+        return 0;
+    }
+
+    var deg = parseFloat(data[1]);
+    var min = parseFloat(data[2]);
+    var sec = parseFloat(data[3]);
+
+    return deg + "/1 " + min + "/1 " + Math.floor(sec) + "/1";
+}
+
 function fetchPhoto(photo) {
     var filepath = "img" + photo.id + ".jpg"
     if (fs.existsSync(filepath)) {
@@ -57,6 +72,59 @@ function fetchPhoto(photo) {
                             if (!exifTag.tagspace.contains("GPS") && !tag.contains("DateTime"))
                                 continue;
 
+                            //
+                            // Custom processing
+                            //
+                            if (tag == "Exif.GPSInfo.GPSLatitudeRef") {
+                                if (val == "North")
+                                    val = "N"
+                                else if (val == "South")
+                                    val = "S"
+                                else
+                                    continue;
+                            }
+                            else if (tag == "Exif.GPSInfo.GPSLongitudeRef") {
+                                if (val == "East")
+                                    val = "E"
+                                else if (val == "West")
+                                    val = "W"
+                                else
+                                    continue;
+                            }
+                            else if (tag == "Exif.GPSInfo.GPSAltitudeRef") {
+                                if (val == "Above Sea Level")
+                                    val = "0"
+                                else
+                                    val = "1"
+                            }
+                            else if (tag == "Exif.GPSInfo.GPSLatitude") {
+                                val = convertToDecimal(val);
+                                if (!val) {
+                                    continue;
+                                }
+                            }
+                            else if (tag == "Exif.GPSInfo.GPSLongitude") {
+                                val = convertToDecimal(val);
+                                if (!val) {
+                                    continue;
+                                }
+                            }
+                            else if (tag == "Exif.GPSInfo.GPSAltitude") {
+                                var regExp = new RegExp("(\\d+) m");
+                                var data = regExp.exec(val);
+                                if (!data) {
+                                    console.log("NO MATCH " + val)
+                                    continue;
+                                }
+
+                                val = parseFloat(data[1]);
+                            }
+                            else if (tag == "Exif.Photo.DateTimeOriginal") {
+
+                            }
+                            else {
+                                continue;
+                            }
                             tagMap[tag] = val
                         }
 
